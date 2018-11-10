@@ -1,0 +1,5 @@
+user = {{ getv "/postfix/mysql/username" }}
+password = {{ getv "/postfix/mysql/password" }}
+hosts = {{ getv "/postfix/mysql/host" }}
+dbname = {{ getv "/postfix/mysql/dbname" }}
+query = SELECT destination FROM virtual_aliases WHERE source='%s'

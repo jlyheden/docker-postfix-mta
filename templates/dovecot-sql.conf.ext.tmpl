@@ -1,0 +1,4 @@
+driver = mysql
+connect = host={{ getv "/postfix/mysql/host" }} dbname={{ getv "/postfix/mysql/dbname" }} user={{ getv "/postfix/mysql/username" }} password={{ getv "/postfix/mysql/password" }}
+default_pass_scheme = {{ getv "/dovecot/pwscheme" }}
+password_query = SELECT username, password FROM virtual_users WHERE username='%n'

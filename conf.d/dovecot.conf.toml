@@ -1,0 +1,6 @@
+[template]
+src = "dovecot.conf.tmpl"
+dest = "/etc/dovecot/dovecot.conf"
+owner = "root"
+mode = "0644"
+keys = ["/dovecot"]

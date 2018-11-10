@@ -1,0 +1,6 @@
+[template]
+src = "mysql-virtual-email2email.cf.tmpl"
+dest = "/etc/postfix/mysql-virtual-email2email.cf"
+owner = "root"
+mode = "0600"
+keys = ["/postfix"]

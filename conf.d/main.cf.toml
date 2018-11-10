@@ -1,0 +1,6 @@
+[template]
+src = "main.cf.tmpl"
+dest = "/etc/postfix/main.cf"
+owner = "root"
+mode = "0644"
+keys = ["/postfix"]

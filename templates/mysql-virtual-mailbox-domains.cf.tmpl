@@ -1,0 +1,5 @@
+user = {{ getv "/postfix/mysql/username" }}
+password = {{ getv "/postfix/mysql/password" }}
+hosts = {{ getv "/postfix/mysql/host" }}
+dbname = {{ getv "/postfix/mysql/dbname" }}
+query = SELECT 1 FROM virtual_domains WHERE name='%s'
