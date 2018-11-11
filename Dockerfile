@@ -5,6 +5,7 @@ RUN apk --no-cache add \
   postfix-mysql \
   postfix \
   postfix-pcre \
+  dovecot-pigeonhole-plugin \
   dovecot-mysql \
   dovecot \
   supervisor \
@@ -20,12 +21,14 @@ RUN curl -L https://github.com/kelseyhightower/confd/releases/download/v0.16.0/c
 EXPOSE 25
 EXPOSE 465
 EXPOSE 587
+EXPOSE 4190
 
 COPY ./files/postfix /etc/postfix
 COPY ./files/dovecot /etc/dovecot
 COPY ./files/supervisord.conf /etc/supervisor/supervisord.conf
-COPY ./files/entrypoint.sh /
+COPY ./files/startup.sh /
+RUN chmod +x /startup.sh
 COPY ./conf.d /etc/confd/conf.d
 COPY ./templates /etc/confd/templates
 
-ENTRYPOINT [ "/bin/bash", "/entrypoint.sh" ]
+CMD [ "/startup.sh" ]

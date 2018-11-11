@@ -1,3 +1,4 @@
+mail_plugins = $mail_plugins zlib
 protocols = lmtp
 postmaster_address = {{ getv "/dovecot/postmaster/address" }}
 dict {
@@ -56,6 +57,16 @@ service lmtp {
     group = postfix
   }
 }
+
+protocol lmtp {
+  mail_plugins = $mail_plugins sieve
+}
+
+plugin {
+  zlib_save_level = 6 # 1..9; default is 6
+  zlib_save = gz # or bz2, xz or lz4
+}
+
 service auth {
   # Postfix smtp-auth
   unix_listener /var/spool/postfix/private/auth {
@@ -81,4 +92,187 @@ service dict {
     #user =
     #group =
   }
+}
+
+##
+## Settings for the Sieve interpreter
+##
+
+plugin {
+  sieve = file:~/sieve;active=~/.dovecot.sieve
+  sieve_extensions = +notify +imapflags
+  # The maximum size of a Sieve script. The compiler will refuse to compile any
+  # script larger than this limit. If set to 0, no limit on the script size is
+  # enforced.
+  #sieve_max_script_size = 1M
+
+  # The maximum number of actions that can be performed during a single script
+  # execution. If set to 0, no limit on the total number of actions is enforced.
+  #sieve_max_actions = 32
+
+  # The maximum number of redirect actions that can be performed during a single
+  # script execution. If set to 0, no redirect actions are allowed.
+  #sieve_max_redirects = 4
+
+  # The maximum number of personal Sieve scripts a single user can have. If set
+  # to 0, no limit on the number of scripts is enforced.
+  # (Currently only relevant for ManageSieve)
+  #sieve_quota_max_scripts = 0
+
+  # The maximum amount of disk storage a single user's scripts may occupy. If
+  # set to 0, no limit on the used amount of disk storage is enforced.
+  # (Currently only relevant for ManageSieve)
+  #sieve_quota_max_storage = 0
+
+  # The primary e-mail address for the user. This is used as a default when no
+  # other appropriate address is available for sending messages. If this setting
+  # is not configured, either the postmaster or null "<>" address is used as a
+  # sender, depending on the action involved. This setting is important when
+  # there is no message envelope to extract addresses from, such as when the
+  # script is executed in IMAP.
+  #sieve_user_email =
+
+  # The path to the file where the user log is written. If not configured, a
+  # default location is used. If the main user's personal Sieve (as configured
+  # with sieve=) is a file, the logfile is set to <filename>.log by default. If
+  # it is not a file, the default user log file is ~/.dovecot.sieve.log.
+  #sieve_user_log =
+
+  # Specifies what envelope sender address is used for redirected messages.
+  # The following values are supported for this setting:
+  #
+  #   "sender"         - The sender address is used (default).
+  #   "recipient"      - The final recipient address is used.
+  #   "orig_recipient" - The original recipient is used.
+  #   "user_email"     - The user's primary address is used. This is
+  #                      configured with the "sieve_user_email" setting. If
+  #                      that setting is unconfigured, "user_mail" is equal to
+  #                      "recipient".
+  #   "postmaster"     - The postmaster_address configured for the LDA.
+  #   "<user@domain>"  - Redirected messages are always sent from user@domain.
+  #                      The angle brackets are mandatory. The null "<>" address
+  #                      is also supported.
+  #
+  # This setting is ignored when the envelope sender is "<>". In that case the
+  # sender of the redirected message is also always "<>".
+  #sieve_redirect_envelope_from = sender
+
+  ## TRACE DEBUGGING
+  # Trace debugging provides detailed insight in the operations performed by
+  # the Sieve script. These settings apply to both the LDA Sieve plugin and the
+  # IMAPSIEVE plugin.
+  #
+  # WARNING: On a busy server, this functionality can quickly fill up the trace
+  # directory with a lot of trace files. Enable this only temporarily and as
+  # selective as possible.
+
+  # The directory where trace files are written. Trace debugging is disabled if
+  # this setting is not configured or if the directory does not exist. If the
+  # path is relative or it starts with "~/" it is interpreted relative to the
+  # current user's home directory.
+  #sieve_trace_dir =
+
+  # The verbosity level of the trace messages. Trace debugging is disabled if
+  # this setting is not configured. Possible values are:
+  #
+  #   "actions"        - Only print executed action commands, like keep,
+  #                      fileinto, reject and redirect.
+  #   "commands"       - Print any executed command, excluding test commands.
+  #   "tests"          - Print all executed commands and performed tests.
+  #   "matching"       - Print all executed commands, performed tests and the
+  #                      values matched in those tests.
+  #sieve_trace_level =
+
+  # Enables highly verbose debugging messages that are usually only useful for
+  # developers.
+  #sieve_trace_debug = no
+
+  # Enables showing byte code addresses in the trace output, rather than only
+  # the source line numbers.
+  #sieve_trace_addresses = no
+}
+
+##
+## ManageSieve specific settings
+##
+
+# Uncomment to enable managesieve protocol:
+#protocols = $protocols sieve
+
+# Service definitions
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+
+  #inet_listener sieve_deprecated {
+  #  port = 2000
+  #}
+
+  # Number of connections to handle before starting a new process. Typically
+  # the only useful values are 0 (unlimited) or 1. 1 is more secure, but 0
+  # is faster. <doc/wiki/LoginProcess.txt>
+  #service_count = 1
+
+  # Number of processes to always keep waiting for more connections.
+  #process_min_avail = 0
+
+  # If you set service_count=0, you probably need to grow this.
+  #vsz_limit = 64M
+}
+
+service managesieve {
+  # Max. number of ManageSieve processes (connections)
+  #process_limit = 1024
+}
+
+# Service configuration
+
+protocol sieve {
+  # Maximum ManageSieve command line length in bytes. ManageSieve usually does
+  # not involve overly long command lines, so this setting will not normally
+  # need adjustment
+  #managesieve_max_line_length = 65536
+
+  # Maximum number of ManageSieve connections allowed for a user from each IP
+  # address.
+  # NOTE: The username is compared case-sensitively.
+  #mail_max_userip_connections = 10
+
+  # Space separated list of plugins to load (none known to be useful so far).
+  # Do NOT try to load IMAP plugins here.
+  #mail_plugins =
+
+  # MANAGESIEVE logout format string:
+  #  %i - total number of bytes read from client
+  #  %o - total number of bytes sent to client
+  #  %{put_bytes} - Number of bytes saved using PUTSCRIPT command
+  #  %{put_count} - Number of scripts saved using PUTSCRIPT command
+  #  %{get_bytes} - Number of bytes read using GETCRIPT command
+  #  %{get_count} - Number of scripts read using GETSCRIPT command
+  #  %{get_bytes} - Number of bytes processed using CHECKSCRIPT command
+  #  %{get_count} - Number of scripts checked using CHECKSCRIPT command
+  #  %{deleted_count} - Number of scripts deleted using DELETESCRIPT command
+  #  %{renamed_count} - Number of scripts renamed using RENAMESCRIPT command
+  #managesieve_logout_format = bytes=%i/%o
+
+  # To fool ManageSieve clients that are focused on CMU's timesieved you can
+  # specify the IMPLEMENTATION capability that Dovecot reports to clients.
+  # For example: 'Cyrus timsieved v2.2.13'
+  #managesieve_implementation_string = Dovecot Pigeonhole
+
+  # Explicitly specify the SIEVE and NOTIFY capability reported by the server
+  # before login. If left unassigned these will be reported dynamically
+  # according to what the Sieve interpreter supports by default (after login
+  # this may differ depending on the user).
+  #managesieve_sieve_capability =
+  #managesieve_notify_capability =
+
+  # The maximum number of compile errors that are returned to the client upon
+  # script upload or script verification.
+  #managesieve_max_compile_errors = 5
+
+  # Refer to 90-sieve.conf for script quota configuration and configuration of
+  # Sieve execution limits.
 }
