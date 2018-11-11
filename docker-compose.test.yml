@@ -1,0 +1,46 @@
+version: "3.4"
+
+services:
+
+  sut:
+    build:
+      context: ./test
+    environment:
+      POSTFIX_MYSQL_USERNAME: dbuser
+      POSTFIX_MYSQL_PASSWORD: dbpass
+      POSTFIX_MYSQL_HOST: db
+      POSTFIX_MYSQL_DBNAME: mailserver
+    volumes:
+      - mail-volume:/mail
+      # - ./test/features:/features:ro
+    depends_on:
+      - smtp
+      - db
+
+  smtp:
+    build:
+      context: .
+    depends_on:
+      - db
+    environment:
+      POSTFIX_MYHOSTNAME: "mx.example.com"
+      POSTFIX_MYDOMAIN: "example.com"
+      POSTFIX_MYSQL_USERNAME: dbuser
+      POSTFIX_MYSQL_PASSWORD: dbpass
+      POSTFIX_MYSQL_HOST: db
+      POSTFIX_MYSQL_DBNAME: mailserver
+    volumes:
+      - mail-volume:/mail
+  
+  db:
+    image: mariadb:10
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: mailserver
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbpass
+    volumes:
+      - ./test/resources/initdb.d:/docker-entrypoint-initdb.d
+
+volumes:
+  mail-volume:

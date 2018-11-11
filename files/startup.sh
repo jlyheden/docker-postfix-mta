@@ -25,11 +25,11 @@ usermod \
     -g vmail \
     vmail
 
-if ! [ -d /var/mail ]; then
-    mkdir -p /var/mail
+if ! [ -d /mail ]; then
+    mkdir -v -p /mail
 fi
 
-chown -R vmail:vmail /var/mail
+chown -v -R vmail:vmail /mail
 
 confd -onetime -backend env
 

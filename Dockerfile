@@ -31,4 +31,4 @@ RUN chmod +x /startup.sh
 COPY ./conf.d /etc/confd/conf.d
 COPY ./templates /etc/confd/templates
 
-CMD [ "/startup.sh" ]
+ENTRYPOINT [ "/startup.sh" ]
