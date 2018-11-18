@@ -5,14 +5,9 @@ services:
   sut:
     build:
       context: ./test
-    environment:
-      POSTFIX_MYSQL_USERNAME: dbuser
-      POSTFIX_MYSQL_PASSWORD: dbpass
-      POSTFIX_MYSQL_HOST: db
-      POSTFIX_MYSQL_DBNAME: mailserver
     volumes:
       - mail-volume:/mail
-      # - ./test/features:/features:ro
+      - ./test/features:/features:ro
     depends_on:
       - smtp
       - db

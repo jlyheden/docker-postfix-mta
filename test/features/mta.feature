@@ -1,6 +1,6 @@
-Feature: Receiving e-mail
+Feature: Send and receive e-mail
 
-    Scenario: Mail to existing user
+    Scenario: Send e-mail to existing local user
     Given guy.incognito@example.com wants to send an e-mail to john.doe@example.com
     When the sender attempts to send the e-mail
     Then the e-mail should be accepted
